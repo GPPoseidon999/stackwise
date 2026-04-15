@@ -1,5 +1,5 @@
 {
-  "name": "stackwise",
+  "name": "stackwise-cli",
   "version": "0.1.0",
   "description": "AI-driven dev automation — detect tech stacks and sync coding standards",
   "type": "module",
@@ -10,6 +10,10 @@
     "dev": "node bin/stackwise.js",
     "test": "node bin/stackwise.js detect"
   },
+  "files": [
+    "bin/",
+    "src/"
+  ],
   "dependencies": {
     "commander": "^12.0.0",
     "chalk": "^5.3.0",
@@ -19,6 +23,14 @@
   "engines": {
     "node": ">=18.0.0"
   },
-  "keywords": ["stackwise", "standards", "ai", "cli"],
+  "keywords": ["stackwise", "standards", "ai", "cli", "dx"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/GPPoseidon999/stackwise.git"
+  },
+  "homepage": "https://github.com/GPPoseidon999/stackwise",
+  "bugs": {
+    "url": "https://github.com/GPPoseidon999/stackwise/issues"
+  },
   "license": "MIT"
 }

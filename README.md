@@ -28,7 +28,7 @@ The CLI and the rules are intentionally separate. Teams can fork `stackwise-stan
 ### Quick start
 
 ```bash
-npx stackwise init
+npx stackwise-cli init
 ```
 
 ### Configuration
@@ -49,12 +49,12 @@ To use a private fork of the standards repository, change `standards_repo` to po
 
 | Command | Description |
 | --- | --- |
-| `stackwise detect` | Detect stacks from `package.json` without changing files |
-| `stackwise init` | Detect stacks, let the user confirm them, then create `.standards/` |
-| `stackwise sync` | Re-detect the project and rebuild `.standards/` while keeping manual overrides |
-| `stackwise list` | Print the current active rules and manifest metadata |
-| `stackwise add <stack>` | Add one stack standard manually |
-| `stackwise remove <stack>` | Remove one stack standard manually |
+| `stackwise-cli detect` | Detect stacks from `package.json` without changing files |
+| `stackwise-cli init` | Detect stacks, let the user confirm them, then create `.standards/` |
+| `stackwise-cli sync` | Re-detect the project and rebuild `.standards/` while keeping manual overrides |
+| `stackwise-cli list` | Print the current active rules and manifest metadata |
+| `stackwise-cli add <stack>` | Add one stack standard manually |
+| `stackwise-cli remove <stack>` | Remove one stack standard manually |
 
 ### Output
 
@@ -129,7 +129,7 @@ CLI 和规范是有意分开的。团队可以 fork `stackwise-standards` 并修
 ### 快速开始
 
 ```bash
-npx stackwise init
+npx stackwise-cli init
 ```
 
 ### 配置文件
@@ -150,12 +150,12 @@ npx stackwise init
 
 | 命令 | 说明 |
 | --- | --- |
-| `stackwise detect` | 从 `package.json` 检测技术栈，不修改文件 |
-| `stackwise init` | 检测技术栈、让用户确认后生成 `.standards/` |
-| `stackwise sync` | 重新检测项目并重建 `.standards/`，同时保留手动 override |
-| `stackwise list` | 打印当前激活规则和 manifest 元数据 |
-| `stackwise add <stack>` | 手动增加一个技术栈规范 |
-| `stackwise remove <stack>` | 手动移除一个技术栈规范 |
+| `stackwise-cli detect` | 从 `package.json` 检测技术栈，不修改文件 |
+| `stackwise-cli init` | 检测技术栈、让用户确认后生成 `.standards/` |
+| `stackwise-cli sync` | 重新检测项目并重建 `.standards/`，同时保留手动 override |
+| `stackwise-cli list` | 打印当前激活规则和 manifest 元数据 |
+| `stackwise-cli add <stack>` | 手动增加一个技术栈规范 |
+| `stackwise-cli remove <stack>` | 手动移除一个技术栈规范 |
 
 ### 输出结构
 
