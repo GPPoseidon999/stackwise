@@ -15,63 +15,53 @@ import {
   isKnownStack,
   normalizeStackName,
 } from '../utils/stacks.js';
+import { StackwiseError } from '../utils/error.js';
 
 export async function runRemove(stack, cwd = process.cwd()) {
-  const normalizedStack = normalizeStackName(stack);
+  const normalized = normalizeStackName(stack);
+  console.log(chalk.bold(`\n➖ Removing stack: ${normalized}\n`));
 
-  console.log(chalk.bold(`\n➖ Removing stack standard: ${normalizedStack}\n`));
-
-  if (!isKnownStack(normalizedStack)) {
-    const suggestions = getStackSuggestions(normalizedStack);
-
-    console.log(chalk.red(`✗ Unknown stack: ${normalizedStack}`));
-    if (suggestions.length > 0) {
-      console.log(chalk.gray(`  Did you mean: ${suggestions.join(', ')}?`));
-    } else {
-      console.log(chalk.gray(`  Known stacks include: ${getKnownStacksPreview()}`));
-      console.log(chalk.gray('  Check the README for the full supported stack list.'));
-    }
-    console.log();
-    process.exit(1);
+  if (!isKnownStack(normalized)) {
+    const suggestions = getStackSuggestions(normalized);
+    const hint = suggestions.length
+      ? `Did you mean: ${suggestions.join(', ')}?`
+      : `Known stacks include: ${getKnownStacksPreview()}`;
+    throw new StackwiseError('config', `Unknown stack: ${normalized}`, hint);
   }
 
   const { stacks, error } = detectStacks(cwd);
-
   if (error) {
-    console.log(chalk.red(`✗ ${error}`));
-    console.log(chalk.gray('  Make sure you are in a project directory with package.json'));
-    process.exit(1);
+    throw new StackwiseError('config', error, 'Run from a project root with package.json');
   }
 
   const config = readConfig(cwd);
-  const previousRules = readActiveRules(cwd);
-
-  if (!previousRules) {
-    console.log(chalk.yellow('⚠ No active manifest found.'));
-    console.log(chalk.gray('  Run `stackwise init` or `stackwise sync` before removing stacks.\n'));
+  const previous = readActiveRules(cwd);
+  if (!previous) {
+    console.log(chalk.yellow('⚠ No active manifest found. Run `stackwise init` first.\n'));
     return;
   }
 
-  const currentSelectedStacks = deriveSelectedStacks(stacks, previousRules);
-
-  if (!currentSelectedStacks.includes(normalizedStack)) {
-    console.log(chalk.yellow(`⚠ ${normalizedStack} is not currently active.`));
-    console.log(chalk.gray('  Run `stackwise list` to inspect current rules.\n'));
+  const currentSelected = deriveSelectedStacks(stacks, previous);
+  if (!currentSelected.includes(normalized)) {
+    console.log(chalk.yellow(`⚠ ${normalized} is not currently active.`));
     return;
   }
 
-  const selectedStacks = sortStacks(currentSelectedStacks.filter((item) => item !== normalizedStack));
+  const selectedStacks = sortStacks(currentSelected.filter((s) => s !== normalized));
 
   const spinner = ora('Syncing standards repository...').start();
   const { success, path: repoPath, error: gitError } = syncStandardsRepo(
     config.standards_repo,
     config.branch || 'main'
   );
-
   if (!success) {
     spinner.fail(chalk.red('Failed to sync standards repo'));
-    console.log(chalk.red(`\n  Error: ${gitError}`));
-    process.exit(1);
+    throw new StackwiseError(
+      'network',
+      `Could not sync ${config.standards_repo}`,
+      'Check internet and repo URL',
+      gitError
+    );
   }
 
   const version = getRepoVersion(repoPath);
@@ -83,17 +73,10 @@ export async function runRemove(stack, cwd = process.cwd()) {
     detectedStacks: stacks,
     selectedStacks,
   });
-
   spinner.succeed('Standards synced');
 
-  console.log(chalk.gray(`  Active stacks: ${selectedStacks.join(', ') || '(none)'}`));
-  console.log(chalk.gray(`  Installed rules: ${result.copiedRules.length}`));
-
-  if (result.missingConcerns.length > 0) {
-    console.log(chalk.yellow(`  Missing concern rules: ${result.missingConcerns.join(', ')}`));
-  }
-
+  console.log(chalk.gray(`  Active stacks : ${selectedStacks.join(', ') || '(none)'}`));
+  console.log(chalk.gray(`  Rule files    : ${result.copiedRules.length}`));
   console.log();
-  console.log(chalk.green(`✓ Removed ${normalizedStack}`) + chalk.gray(` · version ${version}`));
-  console.log(chalk.gray('  Run `stackwise list` to inspect the current manifest.\n'));
+  console.log(chalk.green(`✓ Removed ${normalized}`) + chalk.gray(` · standards@${version}\n`));
 }

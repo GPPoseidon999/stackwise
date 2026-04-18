@@ -1,10 +1,10 @@
 import chalk from 'chalk';
 import ora from 'ora';
+import { existsSync } from 'fs';
+import { join } from 'path';
 import { detectStacks } from '../utils/detector.js';
 import { readConfig } from '../utils/config.js';
 import { getRepoVersion, syncStandardsRepo } from '../utils/git.js';
-import { existsSync } from 'fs';
-import { join } from 'path';
 import {
   deriveSelectedStacks,
   readActiveRules,
@@ -17,63 +17,58 @@ import {
   isKnownStack,
   normalizeStackName,
 } from '../utils/stacks.js';
+import { StackwiseError } from '../utils/error.js';
 
 export async function runAdd(stack, cwd = process.cwd()) {
-  const normalizedStack = normalizeStackName(stack);
+  const normalized = normalizeStackName(stack);
+  console.log(chalk.bold(`\n➕ Adding stack: ${normalized}\n`));
 
-  console.log(chalk.bold(`\n➕ Adding stack standard: ${normalizedStack}\n`));
-
-  if (!isKnownStack(normalizedStack)) {
-    const suggestions = getStackSuggestions(normalizedStack);
-
-    console.log(chalk.red(`✗ Unknown stack: ${normalizedStack}`));
-    if (suggestions.length > 0) {
-      console.log(chalk.gray(`  Did you mean: ${suggestions.join(', ')}?`));
-    } else {
-      console.log(chalk.gray(`  Known stacks include: ${getKnownStacksPreview()}`));
-      console.log(chalk.gray('  Check the README for the full supported stack list.'));
-    }
-    console.log();
-    process.exit(1);
+  if (!isKnownStack(normalized)) {
+    const suggestions = getStackSuggestions(normalized);
+    const hint = suggestions.length
+      ? `Did you mean: ${suggestions.join(', ')}?`
+      : `Known stacks include: ${getKnownStacksPreview()}`;
+    throw new StackwiseError('config', `Unknown stack: ${normalized}`, hint);
   }
 
   const { stacks, error } = detectStacks(cwd);
-
   if (error) {
-    console.log(chalk.red(`✗ ${error}`));
-    console.log(chalk.gray('  Make sure you are in a project directory with package.json'));
-    process.exit(1);
+    throw new StackwiseError('config', error, 'Run from a project root with package.json');
   }
 
   const config = readConfig(cwd);
-  const previousRules = readActiveRules(cwd);
-  const currentSelectedStacks = deriveSelectedStacks(stacks, previousRules);
+  const previous = readActiveRules(cwd);
+  const currentSelected = deriveSelectedStacks(stacks, previous);
 
-  if (currentSelectedStacks.includes(normalizedStack)) {
-    console.log(chalk.yellow(`⚠ ${normalizedStack} is already active.`));
-    console.log(chalk.gray('  Run `stackwise list` to inspect current rules.\n'));
+  if (currentSelected.includes(normalized)) {
+    console.log(chalk.yellow(`⚠ ${normalized} is already active.`));
     return;
   }
 
-  const selectedStacks = sortStacks([...currentSelectedStacks, normalizedStack]);
+  const selectedStacks = sortStacks([...currentSelected, normalized]);
 
   const spinner = ora('Syncing standards repository...').start();
   const { success, path: repoPath, error: gitError } = syncStandardsRepo(
     config.standards_repo,
     config.branch || 'main'
   );
-
   if (!success) {
     spinner.fail(chalk.red('Failed to sync standards repo'));
-    console.log(chalk.red(`\n  Error: ${gitError}`));
-    process.exit(1);
+    throw new StackwiseError(
+      'network',
+      `Could not sync ${config.standards_repo}`,
+      'Check internet and repo URL',
+      gitError
+    );
   }
 
-  if (!existsSync(join(repoPath, 'stacks', normalizedStack))) {
-    spinner.fail(chalk.red('Stack standard not found in standards repository'));
-    console.log(chalk.red(`\n  Missing stack directory: stacks/${normalizedStack}`));
-    console.log(chalk.gray(`  Repository: ${config.standards_repo}`));
-    process.exit(1);
+  if (!existsSync(join(repoPath, 'stacks', normalized))) {
+    spinner.fail(chalk.red('Stack rules not found'));
+    throw new StackwiseError(
+      'config',
+      `stacks/${normalized} is missing in the standards repo`,
+      `Contribute the rules to ${config.standards_repo} first`
+    );
   }
 
   const version = getRepoVersion(repoPath);
@@ -85,17 +80,13 @@ export async function runAdd(stack, cwd = process.cwd()) {
     detectedStacks: stacks,
     selectedStacks,
   });
-
   spinner.succeed('Standards synced');
 
-  console.log(chalk.gray(`  Active stacks: ${selectedStacks.join(', ')}`));
-  console.log(chalk.gray(`  Installed rules: ${result.copiedRules.length}`));
-
-  if (result.missingStacks.length > 0) {
-    console.log(chalk.yellow(`  Missing stack rules: ${result.missingStacks.join(', ')}`));
+  console.log(chalk.gray(`  Active stacks : ${selectedStacks.join(', ')}`));
+  console.log(chalk.gray(`  Rule files    : ${result.copiedRules.length}`));
+  if (result.missingStacks.length) {
+    console.log(chalk.yellow(`  Missing       : ${result.missingStacks.join(', ')}`));
   }
-
   console.log();
-  console.log(chalk.green(`✓ Added ${normalizedStack}`) + chalk.gray(` · version ${version}`));
-  console.log(chalk.gray('  Run `stackwise list` to inspect the current manifest.\n'));
+  console.log(chalk.green(`✓ Added ${normalized}`) + chalk.gray(` · standards@${version}\n`));
 }

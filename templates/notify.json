@@ -1,0 +1,15 @@
+{
+  "channels": [
+    {
+      "type": "feishu",
+      "app_id": "cli_xxx",
+      "app_secret": "xxx",
+      "webhook_url": "https://open.feishu.cn/open-apis/bot/v2/hook/xxx"
+    }
+  ],
+  "prd_source": {
+    "type": "feishu",
+    "app_id": "cli_xxx",
+    "app_secret": "xxx"
+  }
+}
