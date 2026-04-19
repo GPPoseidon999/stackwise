@@ -1,0 +1,91 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stackwise.dev/schemas/config.schema.json",
+  "title": "stackwise config",
+  "description": "Product-repo config. Lives at agents/config/stackwise.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["standards_repo", "branch"],
+  "properties": {
+    "standards_repo": {
+      "type": "string",
+      "description": "Git URL (or local path for tests) of the standards repository."
+    },
+    "branch": {
+      "type": "string",
+      "default": "main"
+    },
+    "auto_sync": {
+      "type": "boolean",
+      "default": true,
+      "description": "If true, `stackwise run` will sync if the standards cache is older than retention_days or missing."
+    },
+    "standards_path": {
+      "type": "string",
+      "description": "Optional subdirectory inside the standards repo to treat as the standards root. Defaults to the repo root."
+    },
+    "memory": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "index_max_tokens": {
+          "type": "integer",
+          "minimum": 500,
+          "maximum": 10000,
+          "default": 2000,
+          "description": "Hard cap for agents/memory/index.md (the hot layer)."
+        },
+        "retention_days": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 30,
+          "description": "How long entries stay in the hot index before they must be promoted to warm or dropped."
+        }
+      }
+    },
+    "token_budget": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "total": {
+          "type": "integer",
+          "minimum": 100000,
+          "default": 1000000
+        },
+        "reserved_for_output": {
+          "type": "integer",
+          "minimum": 10000,
+          "default": 128000
+        },
+        "instruction_budget": {
+          "type": "integer",
+          "minimum": 50000,
+          "default": 872000,
+          "description": "Cap for the instruction.md + rules + spec slice shipped to the skill."
+        },
+        "warn_threshold": {
+          "type": "integer",
+          "minimum": 10000,
+          "default": 500000,
+          "description": "When the realized instruction slice crosses this, the CLI prints a warning."
+        }
+      }
+    },
+    "test": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "coverage_threshold": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 100,
+          "default": 80
+        },
+        "require_edge_cases": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    }
+  }
+}

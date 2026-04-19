@@ -3,9 +3,12 @@ import ora from 'ora';
 import { confirm, checkbox, select, input } from '@inquirer/prompts';
 import {
   copyFileSync,
+  cpSync,
   existsSync,
   mkdirSync,
   readFileSync,
+  readdirSync,
+  statSync,
   writeFileSync,
 } from 'fs';
 import { fileURLToPath } from 'url';
@@ -29,6 +32,10 @@ const TEMPLATES_DIR = join(
   '..',
   'templates'
 );
+
+// skills 和 schemas 内嵌在 CLI 包里，init 时直接从 src/ 复制到目标项目 agents/
+const SKILLS_SRC_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'skills');
+const SCHEMAS_SRC_DIR = join(dirname(fileURLToPath(import.meta.url)), '..', 'schemas');
 
 const AGENTS_SUBDIRS = [
   'rules',
@@ -214,9 +221,11 @@ export async function runInit({ force = false } = {}, cwd = process.cwd()) {
     selectedStacks,
   });
 
-  // ── Step 7: 创建 agents 子目录 + AGENTS.md ─────────────────────────
+  // ── Step 7: 创建 agents 子目录 + AGENTS.md + skills + schemas ──────
   ensureAgentsTree(cwd);
   ensureAgentsMdAndTemplates(cwd);
+  ensureSkills(cwd);
+  ensureSchemas(cwd);
 
   // ── Step 8: 输出结果 ────────────────────────────────────────────────
   console.log();
@@ -322,6 +331,67 @@ function ensureAgentsMdAndTemplates(cwd) {
       ].join('\n') + '\n',
       'utf-8'
     );
+  }
+}
+
+/**
+ * 把 CLI 自带的 skills 种到 agents/skills/。
+ *  - per-directory 存在性检查：已存在的整个 skill 目录不动，保留用户自定义
+ *  - 用 cpSync recursive，兼容未来单个 skill 内多文件（scripts/ 等）
+ */
+function ensureSkills(cwd) {
+  if (!existsSync(SKILLS_SRC_DIR)) return;
+  const seeded = [];
+  const kept = [];
+  for (const name of readdirSync(SKILLS_SRC_DIR)) {
+    const src = join(SKILLS_SRC_DIR, name);
+    if (!statSync(src).isDirectory()) continue;
+    const dst = join(cwd, AGENTS_DIR, 'skills', name);
+    if (existsSync(dst)) {
+      kept.push(name);
+      continue;
+    }
+    cpSync(src, dst, { recursive: true });
+    seeded.push(name);
+  }
+  if (seeded.length) {
+    console.log(
+      chalk.green(`  ✓ Seeded ${seeded.length} skill(s): ${seeded.join(', ')}`)
+    );
+  }
+  if (kept.length) {
+    console.log(
+      chalk.gray(`  • ${kept.length} skill(s) exist, kept: ${kept.join(', ')}`)
+    );
+  }
+}
+
+/**
+ * 把 CLI 自带的 JSON Schema 种到 agents/schemas/。
+ *  - per-file 存在性检查：已存在的不覆盖（用户可能 pin 了旧版本）
+ */
+function ensureSchemas(cwd) {
+  if (!existsSync(SCHEMAS_SRC_DIR)) return;
+  const seeded = [];
+  const kept = [];
+  for (const name of readdirSync(SCHEMAS_SRC_DIR)) {
+    if (!name.endsWith('.json')) continue;
+    const src = join(SCHEMAS_SRC_DIR, name);
+    const dst = join(cwd, AGENTS_DIR, 'schemas', name);
+    if (existsSync(dst)) {
+      kept.push(name);
+      continue;
+    }
+    copyFileSync(src, dst);
+    seeded.push(name);
+  }
+  if (seeded.length) {
+    console.log(
+      chalk.green(`  ✓ Seeded ${seeded.length} schema(s): ${seeded.join(', ')}`)
+    );
+  }
+  if (kept.length) {
+    console.log(chalk.gray(`  • ${kept.length} schema(s) exist, kept`));
   }
 }
 

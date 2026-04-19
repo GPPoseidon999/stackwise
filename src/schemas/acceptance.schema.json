@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stackwise.dev/schemas/acceptance.schema.json",
+  "title": "stackwise acceptance.yaml",
+  "description": "Hash-addressed acceptance criteria derived from prd.md. Lives at agents/spec/[feature]/acceptance.yaml.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["feature", "acceptance"],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}-[a-z0-9][a-z0-9-]*$"
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "text", "must_pass"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable id: first 4 hex chars of md5(text).",
+            "pattern": "^[0-9a-f]{4}$"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The acceptance criterion in the user's natural language."
+          },
+          "must_pass": {
+            "type": "boolean",
+            "default": true,
+            "description": "true = hard gate; false = nice-to-have."
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

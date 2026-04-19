@@ -1,0 +1,119 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stackwise.dev/schemas/active-rules.schema.json",
+  "title": "stackwise agents/active-rules.json",
+  "description": "Manifest of rules synced into the product repo. Produced by `stackwise sync`; consumed by every skill.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["generated_at", "standards_repo", "stacks", "rules"],
+  "properties": {
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "standards_repo": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["url", "branch", "version"],
+      "properties": {
+        "url": { "type": "string" },
+        "branch": { "type": "string" },
+        "version": {
+          "type": "string",
+          "description": "Short commit hash of the synced standards commit."
+        }
+      }
+    },
+    "stacks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["detected", "selected"],
+      "properties": {
+        "detected": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "selected": {
+          "type": "array",
+          "items": { "type": "string" },
+          "uniqueItems": true
+        },
+        "manual_overrides": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "added":   { "type": "array", "items": { "type": "string" }, "uniqueItems": true },
+            "removed": { "type": "array", "items": { "type": "string" }, "uniqueItems": true }
+          }
+        }
+      }
+    },
+    "concerns": {
+      "type": "array",
+      "items": { "type": "string" },
+      "uniqueItems": true
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "type", "priority", "always_apply", "applies_to", "file", "source"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable rule id, e.g. react/component-structure."
+          },
+          "title": { "type": "string" },
+          "type": {
+            "type": "string",
+            "enum": ["stack", "concern"]
+          },
+          "stack": { "type": "string" },
+          "concern": { "type": "string" },
+          "priority": {
+            "type": "string",
+            "enum": ["critical", "high", "medium", "low"]
+          },
+          "always_apply": { "type": "boolean" },
+          "applies_to": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": ["implementation", "review", "testing", "e2e"]
+            },
+            "uniqueItems": true,
+            "minItems": 1
+          },
+          "signals": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "related_rules": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "owner": {
+            "type": "string",
+            "description": "Required for biz/ rules."
+          },
+          "last_reviewed": {
+            "type": "string",
+            "format": "date",
+            "description": "Required for biz/ rules."
+          },
+          "file": {
+            "type": "string",
+            "pattern": "^agents/rules/"
+          },
+          "source": {
+            "type": "string",
+            "enum": ["standards", "local"],
+            "description": "standards = synced from the central repo; local = biz/ rule maintained in the product repo."
+          }
+        }
+      }
+    }
+  }
+}

@@ -146,16 +146,18 @@ agents/                          ← Entire dir is gitignored by default
     biz/                         ← Team-local rules (not in git)
       _template.md
       _example-order-state.md
-  skills/
+  skills/                        ← Seeded from the CLI package at init
     prd-reader/SKILL.md
     spec-writer/SKILL.md
     code-writer/SKILL.md
     code-reviewer/SKILL.md
     test-writer/SKILL.md
-  schemas/
-    prd.schema.yaml
-    spec.schema.yaml
-    review.schema.yaml
+  schemas/                       ← Seeded from the CLI package at init
+    plan.schema.json
+    acceptance.schema.json
+    active-rules.schema.json
+    config.schema.json
+    instruction.schema.json
   memory/
     index.md                     ← Hot layer, <=2000 tokens, append-only
     codebase-index.md            ← Shared code-base ground truth
@@ -197,6 +199,8 @@ agents/                          ← Entire dir is gitignored by default
 
 All summary/distillation work is done by the main agent itself (`claude-sonnet-4-6`). Haiku is not used anywhere in v2.7.
 
+Skill definitions (`src/skills/`) and JSON Schemas (`src/schemas/`) ship with the CLI package. `stackwise init` copies them into `agents/skills/` and `agents/schemas/` in the target project; existing files are preserved, so local customizations survive re-runs. If you want private skills, edit the copies under `agents/` — the CLI will not overwrite them.
+
 ### Local development
 
 ```bash
@@ -210,7 +214,10 @@ npm test
 
 ### Contributing
 
-Issues and pull requests are welcome. To add or improve rules, please contribute to [`stackwise-standards`](https://github.com/GPPoseidon999/stackwise-standards) instead of this repo.
+Issues and pull requests are welcome.
+
+- **Rules** → contribute to [`stackwise-standards`](https://github.com/GPPoseidon999/stackwise-standards).
+- **Skills and schemas** → contribute here under `src/skills/` and `src/schemas/`. They ship with the CLI and are seeded at `stackwise init` time.
 
 ### License
 
@@ -362,16 +369,18 @@ agents/                          ← 整个目录默认 gitignore
     biz/                         ← 团队本地维护，不进 git
       _template.md
       _example-order-state.md
-  skills/
+  skills/                        ← init 时从 CLI 包内种入
     prd-reader/SKILL.md
     spec-writer/SKILL.md
     code-writer/SKILL.md
     code-reviewer/SKILL.md
     test-writer/SKILL.md
-  schemas/
-    prd.schema.yaml
-    spec.schema.yaml
-    review.schema.yaml
+  schemas/                       ← init 时从 CLI 包内种入
+    plan.schema.json
+    acceptance.schema.json
+    active-rules.schema.json
+    config.schema.json
+    instruction.schema.json
   memory/
     index.md                     ← 热层 ≤2000 token，追加写入
     codebase-index.md            ← 代码库索引
@@ -413,6 +422,8 @@ agents/                          ← 整个目录默认 gitignore
 
 所有摘要提炼操作统一由主 agent 自己完成（`claude-sonnet-4-6`）。v2.7 不再使用 Haiku。
 
+Skill 定义（`src/skills/`）和 JSON Schema（`src/schemas/`）随 CLI 包一起分发。`stackwise init` 把它们复制到目标项目的 `agents/skills/` 和 `agents/schemas/`，已存在的文件不会被覆盖，所以本地自定义可以跨 re-init 保留。想要私有 skill 直接改 `agents/` 下的副本即可，CLI 不会回写。
+
 ### 本地开发
 
 ```bash
@@ -426,7 +437,10 @@ npm test
 
 ### 贡献
 
-欢迎提 Issue 和 PR。如果想新增或改进规范规则，请向 [`stackwise-standards`](https://github.com/GPPoseidon999/stackwise-standards) 提交。
+欢迎提 Issue 和 PR。
+
+- **规则（rules）** 请去 [`stackwise-standards`](https://github.com/GPPoseidon999/stackwise-standards) 提交。
+- **Skill 和 Schema** 直接在本仓库的 `src/skills/` 和 `src/schemas/` 下改。它们随 CLI 发布，并在 `stackwise init` 时种到目标项目。
 
 ### 协议
 

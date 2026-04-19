@@ -1,0 +1,68 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stackwise.dev/schemas/instruction.schema.json",
+  "title": "stackwise agents/instruction.md (frontmatter)",
+  "description": "The CLI writes this file to hand off one discrete pipeline step to the main agent / a skill. The main agent reads the YAML frontmatter and then the prose body.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["feature", "spec_dir", "step", "skill", "model"],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}-[a-z0-9][a-z0-9-]*$"
+    },
+    "spec_dir": {
+      "type": "string",
+      "pattern": "^agents/spec/[0-9A-HJKMNP-TV-Z]{26}-[a-z0-9][a-z0-9-]*$"
+    },
+    "step": {
+      "type": "string",
+      "enum": [
+        "prd_reader",
+        "spec_writer",
+        "code_writer",
+        "code_reviewer",
+        "test_writer"
+      ]
+    },
+    "skill": {
+      "type": "string",
+      "enum": [
+        "prd-reader",
+        "spec-writer",
+        "code-writer",
+        "code-reviewer",
+        "test-writer"
+      ]
+    },
+    "model": {
+      "type": "string",
+      "enum": ["claude-opus-4-6", "claude-sonnet-4-6"]
+    },
+    "prd_source": {
+      "type": "string",
+      "description": "Only for step=prd_reader. One of url:<…>, file:<path>, text:<inline>.",
+      "pattern": "^(url:|file:|text:).+"
+    },
+    "current_task": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Only for step=code_writer. The id of the task the skill should execute this invocation."
+    },
+    "diff_base": {
+      "type": "string",
+      "description": "Only for step=code_reviewer. Git ref (e.g. merge-base sha)."
+    },
+    "coverage_threshold": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Only for step=test_writer. Copied from config."
+    },
+    "constraints": {
+      "type": "array",
+      "description": "User-supplied extra constraints gathered during approval gates.",
+      "items": { "type": "string" }
+    }
+  }
+}

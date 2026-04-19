@@ -1,0 +1,142 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://stackwise.dev/schemas/plan.schema.json",
+  "title": "stackwise plan.json",
+  "description": "The single source of truth for a feature's pipeline state. Lives at agents/spec/[feature]/plan.json.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "feature",
+    "branch",
+    "spec_dir",
+    "pipeline_status",
+    "pipeline_steps",
+    "tasks"
+  ],
+  "properties": {
+    "feature": {
+      "type": "string",
+      "description": "Feature id in the form [ulid]-[slug].",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}-[a-z0-9][a-z0-9-]*$"
+    },
+    "branch": {
+      "type": "string",
+      "description": "Git branch for this feature, in the form [english-name]-[YYYYMMDD].",
+      "pattern": "^[a-z0-9][a-z0-9-]*-\\d{8}$"
+    },
+    "spec_dir": {
+      "type": "string",
+      "description": "Relative path to the feature's spec directory.",
+      "pattern": "^agents/spec/[0-9A-HJKMNP-TV-Z]{26}-[a-z0-9][a-z0-9-]*$"
+    },
+    "pipeline_status": {
+      "type": "string",
+      "enum": ["in_progress", "blocked", "done"]
+    },
+    "pipeline_steps": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7,
+      "description": "Fixed ordered list of the seven v2.7 pipeline steps.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["step", "status"],
+        "properties": {
+          "step": {
+            "type": "string",
+            "enum": [
+              "prd_reader",
+              "prd_approval",
+              "spec_writer",
+              "spec_approval",
+              "code_writer",
+              "code_reviewer",
+              "test_writer"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in_progress", "done", "blocked"]
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "description": "Code-writer work items. spec-writer produces these; code-writer consumes them in dependency order.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "status", "skill", "model", "depends_on"],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "status": {
+            "type": "string",
+            "enum": ["pending", "in_progress", "done", "blocked"]
+          },
+          "skill": {
+            "type": "string",
+            "enum": [
+              "prd-reader",
+              "spec-writer",
+              "code-writer",
+              "code-reviewer",
+              "test-writer"
+            ]
+          },
+          "model": {
+            "type": "string",
+            "enum": ["claude-opus-4-6", "claude-sonnet-4-6"]
+          },
+          "depends_on": {
+            "type": "array",
+            "description": "Task ids this task depends on. Must form a DAG with no cycles.",
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "uniqueItems": true
+          },
+          "covers_ac": {
+            "type": "array",
+            "description": "Acceptance ids from acceptance.yaml that this task advances.",
+            "items": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{4}$"
+            },
+            "uniqueItems": true
+          },
+          "files": {
+            "type": "array",
+            "description": "Source files this task creates or modifies.",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}
