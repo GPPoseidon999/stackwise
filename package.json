@@ -1,6 +1,6 @@
 {
   "name": "stackwise-cli",
-  "version": "0.2.0",
+  "version": "2.7.0",
   "description": "AI-driven dev workflow context manager — drives PRD → spec → code → review → test pipelines via the main agent",
   "type": "module",
   "bin": {

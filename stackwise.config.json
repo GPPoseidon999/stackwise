@@ -1,5 +1,19 @@
 {
   "standards_repo": "https://github.com/GPPoseidon999/stackwise-standards",
   "branch": "main",
-  "auto_sync": true
+  "auto_sync": true,
+  "memory": {
+    "index_max_tokens": 2000,
+    "retention_days": 30
+  },
+  "token_budget": {
+    "total": 1000000,
+    "reserved_for_output": 128000,
+    "instruction_budget": 872000,
+    "warn_threshold": 500000
+  },
+  "test": {
+    "coverage_threshold": 80,
+    "require_edge_cases": true
+  }
 }
