@@ -30,7 +30,21 @@ export function syncStandardsRepo(repoUrl, branch = 'main') {
 
   try {
     if (existsSync(join(TEMP_DIR, '.git'))) {
-      // 已存在，执行 pull
+      // 已存在：先确认 origin 和 repoUrl 一致，否则删掉重新 clone
+      // 避免用户切换 standards_repo（或 fork）时还拉旧仓库
+      const originResult = spawnSync('git', ['remote', 'get-url', 'origin'], {
+        cwd: TEMP_DIR,
+        encoding: 'utf-8',
+      });
+      const currentOrigin =
+        originResult.status === 0 ? originResult.stdout.trim() : null;
+
+      if (currentOrigin !== repoUrl) {
+        rmSync(TEMP_DIR, { recursive: true, force: true });
+        return cloneRepo(repoUrl, branch);
+      }
+
+      // origin 匹配，执行 pull
       const result = spawnSync('git', ['pull', 'origin', branch], {
         cwd: TEMP_DIR,
         encoding: 'utf-8',
