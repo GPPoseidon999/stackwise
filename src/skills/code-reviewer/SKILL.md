@@ -113,6 +113,7 @@ git diff <diff_base>...HEAD               # 完整 diff
 - `pipeline_steps[step=code_reviewer].status` → `blocked`
 - 在 `plan.json` 的 `tasks` 末尾追加修复 task：每个 blocker 一个 task，`skill: "code-writer"`、`model: "claude-opus-4-6"`、`depends_on: []`、`covers_ac` 继承原 task、`title` 写"修复 review 发现的 X"。
 - 把 `pipeline_steps[step=code_writer].status` 改回 `pending`，让下一轮 `stackwise run` 重进 code-writer。
+- **不设审批节点，直接进入自动修复循环。**
 
 **只有 major/minor**：
 - `pipeline_steps[step=code_reviewer].status` → `done`
@@ -128,7 +129,7 @@ git diff <diff_base>...HEAD               # 完整 diff
 回复里包含：
 1. review.md 完整内容（或摘要 + 路径，视 blocker 数量而定）
 2. 当前 pipeline 状态
-3. 如果有 blocker：明确告诉主 agent "请再次触发 code-writer 执行修复 tasks"。如果无 blocker：明确告诉主 agent "可以进入 test-writer"。
+3. 如果有 blocker：不等待人工指令，直接读取 `agents/skills/code-writer/SKILL.md`，按照修复 tasks 依次执行 code-writer。每个修复 task 完成后更新 plan.json 对应 task 的 status 为 done。所有修复 task 完成后，**重新执行一次 code-reviewer**（从 Step 1 开始），直到没有 blocker 为止。如果连续修复超过 3 轮仍有 blocker，停下来在 chat 里报告，等待人工介入。如果无 blocker：明确告诉主 agent "可以进入 test-writer"。
 
 ## 失败模式
 

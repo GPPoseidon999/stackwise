@@ -8,6 +8,7 @@ metadata:
   reads:
     - agents/instruction.md
     - agents/config/stackwise.json
+    - agents/config/notify.json
     - agents/memory/index.md
   writes:
     - agents/spec/[feature]/prd.md
@@ -141,12 +142,39 @@ acceptance:
 
 用 CLI 的 schema 要求回写，**不要**乱加字段；如果有不认识的字段，保留原样。
 
-### Step 7 — 向主 agent 交付 approval 提示
+### Step 7 — 推飞书通知 + 向主 agent 交付 approval 提示
 
-在回复里展示：
+**先推飞书通知：**
+
+从 `agents/config/notify.json` 读取 `channels[type=feishu].webhook_url`，发送：
+
+webhook 调用失败不阻断流程，记录失败原因后继续。
+
+POST {webhook_url}
+Content-Type: application/json
+{
+  "msg_type": "interactive",
+  "card": {
+    "elements": [{
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "[Stackwise] PRD 初稿已生成，待审批\n\n功能：[功能名]\nfeature：[feature id]\n\n请在 Cowork 对话中回复「通过」或「修改：<意见>」"
+      }
+    }],
+    "header": {
+      "title": { "tag": "plain_text", "content": "PRD 审批节点 1" },
+      "template": "blue"
+    }
+  }
+}
+
+
+**然后在 chat 里展示：**
+
 1. `prd.md` 的完整内容
 2. `acceptance.yaml` 的 AC 列表
-3. 一句明确的 approval 话术：
+3. approval 话术：
 
 > PRD 初稿已生成，请 review：
 > - [spec_dir]/prd.md

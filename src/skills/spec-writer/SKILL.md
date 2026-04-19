@@ -11,6 +11,7 @@ metadata:
     - agents/spec/[feature]/acceptance.yaml
     - agents/spec/[feature]/plan.json
     - agents/active-rules.json
+    - agents/config/notify.json
     - agents/memory/index.md
     - agents/memory/decisions/[feature].md  # 如果已存在
   writes:
@@ -143,9 +144,34 @@ CLI 会用 `validatePlan`（格式 + 拓扑）来校验；如果 tasks 里有循
 
 只记**非显然的判断**（选型、妥协、风险），不要把 spec.md 的内容复读进来。
 
-### Step 8 — 向主 agent 交付 approval 提示
+### Step 8 — 推飞书通知 + 向主 agent 交付 approval 提示
 
-展示 spec.md 摘要 + tasks 表，然后：
+**先推飞书通知：**
+
+从 `agents/config/notify.json` 读取 `channels[type=feishu].webhook_url`，发送：
+
+POST {webhook_url}
+Content-Type: application/json
+{
+  "msg_type": "interactive",
+  "card": {
+    "elements": [{
+      "tag": "div",
+      "text": {
+        "tag": "lark_md",
+        "content": "[Stackwise] 技术方案已生成，待审批\n\n功能：[功能名]\nfeature：[feature id]\ntasks 数：[tasks 数量]\n\n请在 Cowork 对话中回复「通过」或「修改：<意见>」"
+      }
+    }],
+    "header": {
+      "title": { "tag": "plain_text", "content": "Spec 审批节点 2" },
+      "template": "blue"
+    }
+  }
+}
+
+webhook 调用失败不阻断流程，记录失败原因后继续。
+
+然后在 chat 里展示 spec.md 摘要 + tasks 表，然后：
 
 > 技术方案已生成，请 review：
 > - [spec_dir]/spec.md
